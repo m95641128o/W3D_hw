@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <meta charset="utf-8">
-    <title>Homework 1</title>
+      <meta charset="utf-8">
+      <title>Homework 1</title>
   </head>
   <body>
       <div style="position:absolute;top:10px;left:30px;height:250px;width:100px;border-radius:10px;border:1px solid;" align=center>
@@ -14,11 +14,6 @@
       </div>
 		
       <div>
-        <!--
-        <div id="light" style="position:absolute;top:10vw;left:30vw;  
-         background:pink;width:20px;height:20px;  
-         border-radius:15px;z-index:1"></div>
-        -->
         <img src="christmas_tree.jpg" style="position:absolute;top:10px;left:35vw;width:30vw;z-index:-1">
       </div>
 		
@@ -34,164 +29,159 @@
       <script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
       <script>
         class Light {
+          //燈泡位置參數設定
           constructor(Top,Left) {  
-            // create/append div dynamically
-            // https://stackoverflow.com/questions/14004117/create-div-and-append-div-dynamically
             this.element = document.createElement ('div');
-            //this = iDiv;
             this.element.id = 'light';
-            // set element style attribute
-            //https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/style
             this.element.style.cssText = "position:absolute;width:1vw;height:1vw;border-radius:15px;z-index:1"; 
             this.element.style.top = Top;
             this.element.style.left = Left;
-            // CSS color property: https://www.w3schools.com/cssref/pr_text_color.asp
-            // hsl: https://www.w3schools.com/colors/colors_hsl.asp
             this.element.style.background = "hsl(0, 100%, 51%)";
             document.getElementsByTagName('body')[0].appendChild(this.element);
           }
 
-          changeColor() {
-            // https://stackoverflow.com/questions/45147661/javascript-recursion-within-a-class/45147713
+          //開啟電源、簡易模式設定
+          changeColor(count) {
+            //console.log(count);
             var self = this;
             var hue = Math.random()*360;
             self.element.style.background = "hsl(" + hue + ", 100%, 51%)";  
-            setTimeout (function() { self.changeColor() } , 500);
+            timeOut[count]=setTimeout (function() { self.changeColor(count) } , 500);
             //setTimeout ( self.changeColor , 1000);  // why this is not working ...
           }
 			  
-          changeColor_slow(){
+          //複雜模式設定
+          changeColor_slow(count){
+            //console.log(count);
             var self = this;
             var hue = Math.random()*360;
             var time = Math.random()*2000+1000;
             self.element.style.background = "hsl(" + hue + ", 100%, 51%)";  
-            setTimeout (function() { self.changeColor() } , time);
+            timeOut[count]=setTimeout (function() { self.changeColor_slow(count) } , time);
           }
 			  
+          //關閉電源設定
           changeColor_off(){
             var self=this;
             self.element.style.background="hsl(0, 0%, 51%)";
           }
+			  
+          //關閉setTimeout()設定
+          changeColor_stop(count){
+            //console.log(count);
+            clearTimeout(timeOut[count]);
+          }
         }
         ////////////////////////////////////////////////////////////////////////////////
-        function init(top1,left1) {
-          var light = new Light(top1,left1);
-          light.changeColor();
-        }
 			
-        function close(top1,left1){
-          var light = new Light(top1,left1);
-          light.changeColor_off();
-        }
+        //建立燈泡位置
+        var lights=[
+          new Light('17.5vw','45.5vw'),
+          new Light('17.5vw','45.5vw'),
+          new Light('17.5vw','52.5vw'),
+				
+          new Light('19.5vw','49vw'),
+				
+          new Light('21.5vw','45.5vw'),
+          new Light('21.5vw','52.5vw'),
+				
+          new Light('23.5vw','42vw'),
+          new Light('23.5vw','49vw'),
+          new Light('23.5vw','56vw'),
+				
+          new Light('25.5vw','45.5vw'),
+          new Light('25.5vw','52.5vw'),
+				
+          new Light('27.5vw','42vw'),
+          new Light('27.5vw','49vw'),
+          new Light('27.5vw','56vw'),
+				
+          new Light('29.5vw','38.5vw'),
+          new Light('29.5vw','45.5vw'),
+          new Light('29.5vw','52.5vw'),
+          new Light('29.5vw','59.5vw')
+        ];
 			
-        function init2(top1,left1) {
-          var light = new Light(top1,left1);
-          light.changeColor_slow();
-        }
-			
+        //記錄setTimeOut
+        var timeOut=[];
+        //計數timeOut的陣列位置
+        var countAll=0;
+		
+        //開啟電源或切換成簡易模式
         function turnOn(){
-          init('17.5vw','45.5vw');
-          init('17.5vw','52.5vw');
+          countAll=0;
+          for(var count=0;count<lights.length;count++){
+            //console.log(t.length);
+            countAll=count;
+            if(timeOut.length != 0) {
+              console.log(timeOut.length);
+              lights[countAll].changeColor_stop(countAll);
+            }
+          }
 				
-          init('19.5vw','49vw');
-				
-          init('21.5vw','45.5vw');
-          init('21.5vw','52.5vw');
-				
-          init('23.5vw','42vw');
-          init('23.5vw','49vw');
-          init('23.5vw','56vw');
-				
-          init('25.5vw','45.5vw');
-          init('25.5vw','52.5vw');
-				
-          init('27.5vw','42vw');
-          init('27.5vw','49vw');
-          init('27.5vw','56vw');
-				
-          init('29.5vw','38.5vw');
-          init('29.5vw','45.5vw');
-          init('29.5vw','52.5vw');
-          init('29.5vw','59.5vw');
+          for(var count=0;count<lights.length;count++){
+            countAll=count;
+            lights[countAll].changeColor(countAll);
+          }
         }
 			
+        //關閉電源
         function turnOff(){
-          close('17.5vw','45.5vw');
-          close('17.5vw','52.5vw');
-				
-          close('19.5vw','49vw');
-				
-          close('21.5vw','45.5vw');
-          close('21.5vw','52.5vw');
-				
-          close('23.5vw','42vw');
-          close('23.5vw','49vw');
-          close('23.5vw','56vw');
-				
-          close('25.5vw','45.5vw');
-          close('25.5vw','52.5vw');
-				
-          close('27.5vw','42vw');
-          close('27.5vw','49vw');
-          close('27.5vw','56vw');
-				
-          close('29.5vw','38.5vw');
-          close('29.5vw','45.5vw');
-          close('29.5vw','52.5vw');
-          close('29.5vw','59.5vw');
+          countAll=0;
+          for(var count=0;count<lights.length;count++){
+            countAll=count;
+            if(timeOut.length != 0){
+              //console.log(timeOut.length);
+              lights[countAll].changeColor_stop(countAll);
+            }
+            lights[countAll].changeColor_off();
+          }
         }
 			
+        //切換成複雜模式
         function turnHard(){
-          init2('17.5vw','45.5vw');
-          init2('17.5vw','52.5vw');
+          countAll=0;
+          for(var count=0;count<lights.length;count++){
+            countAll=count;
+            if(timeOut.length != 0){
+              //console.log(timeOut.length);
+              lights[countAll].changeColor_stop(countAll);
+            }
+          }
 				
-          init2('19.5vw','49vw');
-				
-          init2('21.5vw','45.5vw');
-          init2('21.5vw','52.5vw');
-				
-          init2('23.5vw','42vw');
-          init2('23.5vw','49vw');
-          init2('23.5vw','56vw');
-				
-          init2('25.5vw','45.5vw');
-          init2('25.5vw','52.5vw');
-				
-          init2('27.5vw','42vw');
-          init2('27.5vw','49vw');
-          init2('27.5vw','56vw');
-				
-          init2('29.5vw','38.5vw');
-          init2('29.5vw','45.5vw');
-          init2('29.5vw','52.5vw');
-          init2('29.5vw','59.5vw');
+          for(var count=0;count<lights.length;count++){
+            countAll=count;
+            lights[countAll].changeColor_slow(countAll);
+          }
         }
 			
+        //主控台
         $(document).on("ready", function() {
           var status="off";
-            $("#on").on("click",function(){
+          $("#on").on("click",function(){
+            turnOn();
+            status="on";
+          });
+				
+          $("#off").on("click",function(){
+            turnOff();
+            status="off";
+          });
+				
+          $("#easy").on("click",function(){
+            if(status=="on"){
               turnOn();
-              status="on";
-            });
+            }
+          });
 				
-            $("#off").on("click",function(){
-              turnOff();
-              status="off";
-            });
-				
-            $("#easy").on("click",function(){
-              if(status=="on"){
-                turnOn();
-              }
-            });
-				
-            $("#hard").on("click",function(){
-              if(status=="on"){
-                turnHard();
-              }
-            });
+          $("#hard").on("click",function(){
+            if(status=="on"){
+              turnHard();
+            }
+          });
         });
 
+        //初始為關閉電源
         turnOff();
     </script>
   </body>
