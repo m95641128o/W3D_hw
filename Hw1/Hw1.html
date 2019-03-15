@@ -75,7 +75,7 @@
         ////////////////////////////////////////////////////////////////////////////////
 			
         //建立燈泡位置
-        var lights=[
+		var lights=[
           new Light('17.5vw','45.5vw'),
           new Light('17.5vw','45.5vw'),
           new Light('17.5vw','52.5vw'),
@@ -101,7 +101,7 @@
           new Light('29.5vw','52.5vw'),
           new Light('29.5vw','59.5vw')
         ];
-			
+		
         //記錄setTimeOut
         var timeOut=[];
         //計數timeOut的陣列位置
@@ -117,11 +117,7 @@
               console.log(timeOut.length);
               lights[countAll].changeColor_stop(countAll);
             }
-          }
-				
-          for(var count=0;count<lights.length;count++){
-            countAll=count;
-            lights[countAll].changeColor(countAll);
+			lights[countAll].changeColor(countAll);
           }
         }
 			
@@ -147,10 +143,6 @@
               //console.log(timeOut.length);
               lights[countAll].changeColor_stop(countAll);
             }
-          }
-				
-          for(var count=0;count<lights.length;count++){
-            countAll=count;
             lights[countAll].changeColor_slow(countAll);
           }
         }
