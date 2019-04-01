@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<!--<link rel="stylesheet" href="css/materialize.min.css">-->
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/84/three.min.js"></script>
+		<script src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
+		<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+	</head>
+	
+	<body>
+		<div id="info">
+			<table width="20%" style="border-radius:5px;background-color: rgba(255, 255, 255, 0.5);">
+				<tr align="center">
+					<td colspan="2">功能選單</td>
+				</tr>
+				<tr align="center">
+					<td width="40%">畫面選項</td>
+					<td width="60%">
+						<select id="chooseCamera" style="width:125px;font-family:Microsoft JhengHei;font-weight:bold;">
+							<option value="0">全視角</option>
+							<option value="1">右1</option>
+							<option value="2">右2</option>
+							<option value="3">右3</option>
+							<option value="4">右4</option>
+							<option value="5">左5</option>
+							<option value="6">左6</option>
+							<option value="7">左7</option>
+							<option value="8">左8</option>
+						</select>
+					</td>
+				</tr>
+				<tr align="center">
+					<td colspan="2">
+						電燈總開關
+					</td>
+				</tr>
+				<tr align="center">
+					<td width="40%">
+						<button id="tView1">電燈開關</button>
+					</td>
+					<td width="60%">
+						亮度
+						<br>
+						<input type="range" min=0.1 max=1 step=0.1 id='intensity' style="width:125px;">
+					</td>
+				</tr>
+				<tr align="center">
+					<td colspan="2">
+						聚光燈總開關
+					</td>
+				</tr>
+				<tr align="center">
+					<td width="40%">
+						<button id="tView2">聚光燈開關</button>
+					</td>
+					<td width="60%">
+						亮度
+						<br>
+						<input type="range" min=0 max=2 step=0.1 id='intensity2' style="width:125px;">
+					</td>
+				</tr>
+				<tr align="center">
+					<td colspan="2">2D平面圖設計</td>
+				</tr>
+				<tr align="center">
+					<td colspan="2">
+						<a href="https://i.imgur.com/aNNykVg.jpg" target="_blank">2D平面圖-1</a>
+						&nbsp;&nbsp;
+						<a href="https://i.imgur.com/Q4VqFTM.jpg" target="_blank">2D平面圖-2</a>
+					</td>
+				</tr>
+			</table>
+		</div>
+		
+		<style>
+			#info{
+				position: absolute;
+				top: 2%;
+				width: 100%;
+				padding: 10px;
+				color: #000000
+				font-weight:bold;
+			}
+			
+			#info td{
+				padding-top:10px;
+			}
+
+			body{
+				overflow: hidden;
+				font-family:Microsoft JhengHei;
+				font-weight:bold;
+			}
+			
+			button{
+				height:30px;width:90px;margin:5px;font-family:Microsoft JhengHei;
+			}
+			
+			a{
+				text-decoration:none;
+			}
+			
+		</style>
+		
+		<script>
+			//電燈(pointLight)物件
+			class Light {
+				constructor(posiX,posiY,posiZ) {
+					this.element = new THREE.PointLight(0xffe4ca, 1, 475);
+					this.element.position.set(posiX, posiY, posiZ);
+					scene.add(this.element);
+					
+					//var pointLightHelper = new THREE.PointLightHelper( this.element, 5 );
+					//scene.add( pointLightHelper );
+					
+					let lamp = Light.buildLamp();
+					scene.add (lamp);
+					lamp.position.copy (this.element.position);
+					lamp.position.y = 145;
+					
+					lamp.lookAt(new THREE.Vector3(posiX,0,posiZ));
+				}
+				
+				//製作電燈
+				static buildLamp() {
+					var lampModel = new THREE.Object3D();
+					var layer2 = new THREE.Object3D();
+
+					var lamp = new THREE.Mesh (new THREE.CylinderBufferGeometry(8,5,10,32), 
+						new THREE.MeshLambertMaterial());
+					layer2.add (lamp);
+					lampModel.add (layer2);
+					layer2.rotation.x = Math.PI/2;
+					return lampModel;
+				}
+				
+				turnOff() {
+					this.element.intensity = 0.1;
+				}
+				
+				turnOn(volume) {
+					this.element.intensity = volume;
+				}
+				
+				lightChange(volume) {
+					//console.log(volume);
+					this.element.intensity = volume;
+				}
+			}
+			
+			//聚光燈(spotLight)物件
+			class Light_spot {
+				constructor(spotX,spotY,spotZ,cubeX,cubeY,cubeZ) {
+					var helper;
+					this.element = new THREE.SpotLight ();
+					this.element.position.set (spotX,spotY,spotZ);
+					this.element.angle = 1;
+					this.element.penumbra = 0.4;
+					this.element.distance = 200;
+					this.element.intensity = 1;
+					this.element.penumbra = 1;
+					this.element.decay = 1;
+					scene.add (this.element);
+					//scene.add (helper = new THREE.SpotLightHelper (this.element, 3));
+					
+					let lamp = Light_spot.buildLamp();
+					scene.add (lamp);
+					lamp.position.copy (this.element.position);
+					
+					var cubeGeometry = new THREE.BoxBufferGeometry (0,0,0);
+					var cubeMaterial = new THREE.MeshLambertMaterial ();
+					var cube = new THREE.Mesh (cubeGeometry, cubeMaterial);
+					cube.position.set (0, 10, 0);
+					scene.add (cube);
+					
+					this.element.target = cube;
+					cube.position.set (cubeX,cubeY,cubeZ);
+					
+					//render();
+					//helper.update();
+					lamp.lookAt (cube.position);
+				}
+				
+				static buildLamp() {
+					var lampModel = new THREE.Object3D();
+					var layer2 = new THREE.Object3D();
+
+					var lamp = new THREE.Mesh (new THREE.CylinderBufferGeometry(8,5,10,32), 
+						new THREE.MeshLambertMaterial());
+					layer2.add (lamp);
+					lampModel.add (layer2);
+					lamp.position.y = 1;
+					layer2.rotation.x = Math.PI/2;
+					return lampModel;
+				}
+				
+				turnOff() {
+					this.element.intensity = 0;
+				}
+				
+				turnOn(volume) {
+					this.element.intensity = volume;
+				}
+				
+				lightChange(volume) {
+					//console.log(volume);
+					this.element.intensity = volume;
+				}
+			}
+
+			//牆面物件
+			class Wall {
+				constructor(boxX,boxY,boxZ,posiX,posiY,posiZ) {
+					this.element = new THREE.Mesh(new THREE.BoxBufferGeometry(boxX,boxY,boxZ), new THREE.MeshPhongMaterial());
+					scene.add(this.element);
+					this.element.position.x = posiX;
+					this.element.position.y = posiY;
+					this.element.position.z = posiZ;
+				}
+			}
+			
+			//設計物件
+			class Design {
+				constructor(boxX,boxY,boxZ,posiX,posiY,posiZ,chairType) {
+					this.element = new THREE.Mesh(new THREE.BoxBufferGeometry(boxX,boxY,boxZ), new THREE.MeshPhongMaterial({
+						side: THREE.DoubleSide,
+						map: chairType
+					}));
+					scene.add(this.element);
+					this.element.position.x = posiX;
+					this.element.position.y = posiY;
+					this.element.position.z = posiZ;
+				}
+			}
+			
+			var useCamera1 = 0;
+			var lightsOff1 = false;
+			var lightsOff2 = false;
+			var lightVolume1 = 1;
+			var lightVolume2 = 1;
+			
+			let lightness1 = document.querySelector('#intensity');
+			lightness1.addEventListener('input', function () {
+				lightVolume1 = lightness1.value;
+				if (!lightsOff1) {
+					for(var i=0;i<light.length;i++) {
+						light[i].lightChange(lightness1.value);
+					}
+				}
+			}, false);
+			
+			let lightness2 = document.querySelector('#intensity2');
+			lightness2.addEventListener('input', function () {
+				lightVolume2 = lightness2.value;
+				if (!lightsOff2) {
+					for(var i=0;i<spotLight.length;i++) {
+						spotLight[i].lightChange(lightness2.value);
+					}
+				}
+			}, false);
+
+			$('#tView1').click(function() {
+				//toggleCamera();
+				lightsOff1 = !lightsOff1;
+			  
+				if (lightsOff1) {
+					for(var i=0;i<light.length;i++) {
+						light[i].turnOff();
+					}
+					$(this).text("關");
+				} else {
+					for(var i=0;i<light.length;i++) {
+						light[i].turnOn(lightVolume1);
+					}
+					$(this).text("開");
+				}
+			});
+			
+			$('#tView2').click(function() {
+				//toggleCamera();
+				lightsOff2 = !lightsOff2;
+			  
+				if (lightsOff2) {
+					for(var i=0;i<spotLight.length;i++) {
+						spotLight[i].turnOff();
+					}
+					$(this).text("關");
+				} else {
+					for(var i=0;i<spotLight.length;i++) {
+						spotLight[i].turnOn(lightVolume2);
+					}
+					$(this).text("開");
+				}
+			});
+			
+			$('#chooseCamera').change(function() {
+				//console.log(this.value);
+				toggleCamera(this.value);
+			});
+			
+			function toggleCamera(number) {
+				useCamera1 = number;
+			}
+
+			var scene, renderer, camera;
+			var camera1,camera2,camera3,camera4,camera5,camera6,camera7,camera8;
+			var light=[];
+			var spotLight=[];
+			var wall=[];
+			var chair=[];
+			var art=[];
+
+			init();
+			animate();
+
+			function init() {
+				scene = new THREE.Scene();
+				renderer = new THREE.WebGLRenderer();
+				renderer.setSize(window.innerWidth, window.innerHeight);
+				renderer.setClearColor(0x888888);
+				document.body.appendChild(renderer.domElement);
+
+				camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 10000);
+				camera.position.y = 400;
+				camera.position.z = 600;
+				controls = new THREE.OrbitControls(camera, renderer.domElement);
+
+				var gridXZ = new THREE.GridHelper(920, 10, 'red', 'white');
+				//scene.add(gridXZ);
+
+				window.addEventListener('resize', onWindowResize, false);
+
+				//////////////////////////////////////////////////////////////////////////////
+				//牆面
+				//右側牆面
+				wall[0] = new Wall(10, 150, 920, 455, 75, 0);
+			  
+				//中間牆面
+				wall[1] = new Wall(10, 150, 820, 0, 75, 50);
+				wall[2] = new Wall(10, 150, 20, 0, 75, -440);
+				wall[3] = new Wall(10, 30, 80, 0, 135, -390);
+			  
+				//左側牆面
+				wall[4] = new Wall(10, 150, 920, -455, 75, 0);
+			  
+				//正面牆面
+				wall[5] = new Wall(820, 150, 10, -50, 75, 455);
+				wall[6] = new Wall(20, 150, 10, 450, 75, 455);
+				wall[7] = new Wall(80, 30, 10, 400, 135, 455);
+			  
+				//背面牆面
+				wall[8] = new Wall(920, 150, 10, 0, 75, -455);
+			  
+				//////////////////////////////////////////////////////////////////////////////
+				//地面
+				let loader = new THREE.TextureLoader();
+				loader.crossOrigin = '';
+				texture = loader.load('https://i.imgur.com/AtF0mSB.jpg');
+				texture.repeat.set (2,2);
+				texture.wrapS = texture.wrapT = true;
+			  
+				let floor = new THREE.Mesh(new THREE.PlaneGeometry(920, 920), new THREE.MeshPhongMaterial({
+					side: THREE.DoubleSide,
+					map: texture
+				}));
+				scene.add(floor);
+				floor.rotation.x = -Math.PI / 2;
+			  
+				//////////////////////////////////////////////////////////////////////////////
+				//長椅材質
+				let chairtexture1 = loader.load('https://i.imgur.com/7q5CiMW.jpg');
+				chairtexture1.wrapS = chairtexture1.wrapT = true;
+			  
+				let chairtexture2 = loader.load('https://i.imgur.com/nMT3ag9.jpg');
+				chairtexture2.wrapS = chairtexture1.wrapT = true;
+			  
+				//右側長椅
+				chair[0] = new Design(60, 10, 300, 245, 65, 0, chairtexture1);
+				chair[1] = new Design(60, 60, 10, 245, 30, 145, chairtexture2);
+				chair[2] = new Design(60, 60, 10, 245, 30, -145, chairtexture2);
+			  
+				//左側長椅
+				chair[3] = new Design(60, 10, 300, -245, 65, 0, chairtexture1);
+				chair[4] = new Design(60, 60, 10, -245, 30, 145, chairtexture2);
+				chair[5] = new Design(60, 60, 10, -245, 30, -145, chairtexture2);
+			
+				//////////////////////////////////////////////////////////////////////////////
+				//攝影機
+				//右側攝影機
+				camera1 = new THREE.PerspectiveCamera(60, 1, 1, 1000);
+				camera1.position.set(445, 130, 0);
+				camera1.lookAt(new THREE.Vector3(0, 10, 0));
+				
+				camera2 = new THREE.PerspectiveCamera(60, 1, 1, 1000);
+				camera2.position.set(5, 130, 0);
+				camera2.lookAt(new THREE.Vector3(450, 10, 0));
+			  
+				camera3 = new THREE.PerspectiveCamera(60, 2, 1, 1000);
+				camera3.position.set(225, 130, 445);
+				camera3.lookAt(new THREE.Vector3(225, 10, -445));
+			  
+				camera4 = new THREE.PerspectiveCamera(60, 2, 1, 1000);
+				camera4.position.set(225, 130, -445);
+				camera4.lookAt(new THREE.Vector3(225, 10, 445));
+			  
+				//左側攝影機
+				camera5 = new THREE.PerspectiveCamera(60, 1, 1, 1000);
+				camera5.position.set(-445, 130, 0);
+				camera5.lookAt(new THREE.Vector3(0, 10, 0));
+			  
+				camera6 = new THREE.PerspectiveCamera(60, 1, 1, 1000);
+				camera6.position.set(-5, 130, 0);
+				camera6.lookAt(new THREE.Vector3(-445, 10, 0));
+			  
+				camera7 = new THREE.PerspectiveCamera(60, 2, 1, 1000);
+				camera7.position.set(-225, 130, 445);
+				camera7.lookAt(new THREE.Vector3(-225, 10, -445));
+			  
+				camera8 = new THREE.PerspectiveCamera(60, 2, 1, 1000);
+				camera8.position.set(-225, 130, -445);
+				camera8.lookAt(new THREE.Vector3(-225, 10, 445));
+			  
+				//////////////////////////////////////////////////////////////////////////////
+				//電燈
+				//右側電燈
+				light[0]=new Light(112.5, 150, 225);
+				light[1]=new Light(337.5, 150, 225);
+				light[2]=new Light(112.5, 150, -225);
+				light[3]=new Light(337.5, 150, -225);
+			  
+				//左側電燈
+				light[4]=new Light(-112.5, 150, 225);
+				light[5]=new Light(-337.5, 150, 225);
+				light[6]=new Light(-112.5, 150, -225);
+				light[7]=new Light(-337.5, 150, -225);
+			  
+				//////////////////////////////////////////////////////////////////////////////
+				//聚光燈
+				//右側聚光燈
+				spotLight[0]=new Light_spot(350,140,225,450,100,225);
+				spotLight[1]=new Light_spot(350,140,0,450,100,0);
+				spotLight[2]=new Light_spot(350,140,-225,450,100,-225);
+				spotLight[3]=new Light_spot(225,140,350,225,100,450);
+				spotLight[4]=new Light_spot(225,140,-350,225,100,-450);
+			  
+			  
+				//中央聚光燈
+				spotLight[5]=new Light_spot(-100,140,225,0,100,225);
+				spotLight[6]=new Light_spot(100,140,0,0,100,0);
+				spotLight[7]=new Light_spot(100,140,225,0,100,225);
+				spotLight[8]=new Light_spot(-100,140,-225,0,100,-225);
+				spotLight[9]=new Light_spot(-100,140,0,0,100,0);
+				spotLight[10]=new Light_spot(100,140,-225,0,100,-225);
+			  
+				//左側聚光燈
+				spotLight[11]=new Light_spot(-350,140,225,-450,100,225);
+				spotLight[12]=new Light_spot(-350,140,0,-450,100,0);
+				spotLight[13]=new Light_spot(-350,140,-225,-450,100,-225);
+				spotLight[14]=new Light_spot(-225,140,350,-225,100,450);
+				spotLight[15]=new Light_spot(-225,140,-350,-225,100,-450);
+			  
+				//////////////////////////////////////////////////////////////////////////////
+				//作品
+				var arttexture = [];
+				//右側作品圖
+				arttexture[0] = loader.load('https://i.imgur.com/3eFueWD.jpg');
+				arttexture[1] = loader.load('https://i.imgur.com/70K7d2w.jpg');
+				arttexture[2] = loader.load('https://i.imgur.com/ocYgRN5.jpg');
+				arttexture[3] = loader.load('https://i.imgur.com/ve2qVA3.jpg');
+				arttexture[4] = loader.load('https://i.imgur.com/gLOlO3p.jpg');
+			  
+				//中央作品圖
+				arttexture[5] = loader.load('https://i.imgur.com/P8qkYI0.jpg');
+				arttexture[6] = loader.load('https://i.imgur.com/AhOqS6u.jpg');
+				arttexture[7] = loader.load('https://i.imgur.com/CYUQ4M5.jpg');
+				arttexture[8] = loader.load('https://i.imgur.com/oLJYBY0.jpg');
+				arttexture[9] = loader.load('https://i.imgur.com/K34rUHI.jpg');
+				arttexture[10] = loader.load('https://i.imgur.com/Qb61tQ2.jpg');
+			  
+				//左側作品圖
+				arttexture[11] = loader.load('https://i.imgur.com/OyHHX53.jpg');
+				arttexture[12] = loader.load('https://i.imgur.com/WOMF61M.jpg');
+				arttexture[13] = loader.load('https://i.imgur.com/k32u2Do.jpg');
+				arttexture[14] = loader.load('https://i.imgur.com/fQRTHTF.jpg');
+				arttexture[15] = loader.load('https://i.imgur.com/IpGrAj5.jpg');
+			  
+				arttexture.wrapS = arttexture.wrapT = true;
+				//右側作品
+				art[0] = new Design(5, 100, 100, 452, 80, 0, arttexture[0]);
+				art[1] = new Design(5, 100, 100, 452, 80, 225, arttexture[1]);
+				art[2] = new Design(5, 100, 100, 452, 80, -225, arttexture[2]);
+				art[3] = new Design(100, 100, 5, 225, 80, 452, arttexture[3]);
+				art[4] = new Design(100, 100, 5, 225, 80, -452, arttexture[4]);
+			  
+				//中央作品
+				art[5] = new Design(5, 100, 100, 3, 80, 0, arttexture[5]);
+				art[6] = new Design(5, 100, 100, 3, 80, 225, arttexture[6]);
+				art[7] = new Design(5, 100, 100, 3, 80, -225, arttexture[7]);
+				art[8] = new Design(5, 100, 100, -3, 80, 0, arttexture[8]);
+				art[9] = new Design(5, 100, 100, -3, 80, 225, arttexture[9]);
+				art[10] = new Design(5, 100, 100, -3, 80, -225, arttexture[10]);
+			  
+				//左側作品
+				art[11] = new Design(5, 100, 100, -452, 80, 0, arttexture[11]);
+				art[12] = new Design(5, 100, 100, -452, 80, 225, arttexture[12]);
+				art[13] = new Design(5, 100, 100, -452, 80, -225, arttexture[13]);
+				art[14] = new Design(100, 100, 5, -225, 80, 452, arttexture[14]);
+				art[15] = new Design(100, 100, 5, -225, 80, -452, arttexture[15]);
+			}
+
+			function onWindowResize() {
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+				renderer.setSize(window.innerWidth, window.innerHeight);
+			}
+
+			function animate() {
+				requestAnimationFrame(animate);
+				
+				let nowCamera;
+				switch(useCamera1) {
+					case "1":
+						nowCamera = camera1;
+						break;
+					case "2":
+						nowCamera = camera2;
+						break;
+					case "3":
+						nowCamera = camera3;
+						break;
+					case "4":
+						nowCamera = camera4;
+						break;
+					case "5":
+						nowCamera = camera5;
+						break;
+					case "6":
+						nowCamera = camera6;
+						break;
+					case "7":
+						nowCamera = camera7;
+						break;
+					case "8":
+						nowCamera = camera8;
+						break;
+					default:
+						nowCamera = camera;
+				}
+				renderer.render(scene, nowCamera);
+			}
+			
+			function render() {
+				renderer.render (scene, camera);
+			}
+
+		</script>
+	</body>
+<html>
