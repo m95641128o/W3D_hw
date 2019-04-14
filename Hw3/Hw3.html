@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/84/three.min.js"></script>
+		<script src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
+		<title>Homework 3</title>
+	</head>
+	<body>
+		<h1 style="font-size:2em; text-align:center; margin:15px"> 
+				西方油畫藝術展
+		</h1>
+		<hr>
+		<div id="main1">
+			<table id="main2" align=center style="width:1200px;">
+				<tr>
+					<td align=left>
+						<div id="container"></div>
+					</td>
+					<td align=left style="height:550px;">
+						<div id="info">
+							<table width="20%" style="background-color:rgba(255,255,255,0.5); border-radius:10px;">
+								<tr align="center">
+									<td colspan="2">功能選單</td>
+								</tr>
+								<tr align="center">
+									<td width="40%">作品選項</td>
+									<td width="60%">
+										<select id="choosePortfolio" style="width:125px;font-family:Microsoft JhengHei;font-weight:bold;">
+											<option value="0">全視角</option>
+											<option value="1">拾穗</option>
+											<option value="2">佛利貝爾傑酒店</option>
+											<option value="3">阿爾附近的吊橋</option>
+											<option value="4">塞納河風光</option>
+											<option value="5">遮蔽的早晨</option>
+											
+											<option value="6">花開滿原野</option>
+											<option value="7">傑克島的風光</option>
+											<option value="8">乾草車</option>
+											<option value="9">鳶尾花</option>
+											<option value="10">法式茶園</option>
+											<option value="11">船上的午宴</option>
+											
+											<option value="12">煎餅磨坊</option>
+											<option value="13">莫瑞橋</option>
+											<option value="14">巴黎郊外</option>
+											<option value="15">蒙梭公園</option>
+											<option value="16">睡蓮池：粉紅色的和諧</option>
+										</select>
+									</td>
+								</tr>
+								<tr align="center">
+									<td width="40%">監視器選項</td>
+									<td width="60%">
+										<select id="chooseCamera" style="width:125px;font-family:Microsoft JhengHei;font-weight:bold;">
+											<option value="0">全視角</option>
+											<option value="1">右1</option>
+											<option value="2">右2</option>
+											<option value="3">左1</option>
+											<option value="4">左2</option>
+										</select>
+									</td>
+								</tr>
+								<tr align="center">
+									<td colspan="2">
+										電燈總開關
+									</td>
+								</tr>
+								<tr align="center">
+									<td width="40%">
+										<button id="tView1">電燈開關</button>
+									</td>
+									<td width="60%">
+										亮度
+										<br>
+										<input type="range" min=0.1 max=1 step=0.1 id='intensity' style="width:125px;">
+									</td>
+								</tr>
+								<tr align="center">
+									<td colspan="2">
+										聚光燈總開關
+									</td>
+								</tr>
+								<tr align="center">
+									<td width="40%">
+										<button id="tView2">聚光燈開關</button>
+									</td>
+									<td width="60%">
+										亮度
+										<br>
+										<input type="range" min=0 max=2 step=0.1 id='intensity2' style="width:125px;">
+									</td>
+								</tr>
+							</table>
+						</div>
+					
+						<div id="container2">
+						  <canvas id='mycanvas'></canvas>
+						</div>
+					</td>
+				</tr>
+				<tr>
+					<td colspan=2>
+						<div id="content_write"></div>
+					</td>
+				</tr>
+			</table>
+		</div>
+		
+		<style>
+			body{
+				background-image:url("https://i.imgur.com/J7EZqxi.jpg");
+				//background-repeat:repeat-y;
+				font-family:Microsoft JhengHei;
+				font-weight:bold;
+			}
+			
+			#main2 {
+				width:80%;
+				border-radius:10px;
+			}
+			
+			#container {
+				width:750px;
+				height:525px;
+			}
+			
+			#container2 {
+				margin-left:1vw;
+				width:350px;
+				height:210px;
+			}
+			
+			#info{
+				margin-left:3.5vw;
+				padding: 10px;
+				color: #000000;
+				font-weight:bold;
+			}
+			
+			#info td{
+				padding-top:10px;
+			}
+			
+			#content_write{
+				//border:1px solid black;
+				width:750px;
+				height:170px;
+				border-radius:10px;
+				background-color:rgba(255,255,255,0.5);
+			}
+			
+			button{
+				height:30px;width:90px;margin:5px;font-family:Microsoft JhengHei;
+			}
+
+			p {
+				margin: 10px;
+				text-align: justify;
+			}
+		</style>
+		
+		<script>
+			//電燈(pointLight)物件
+			class Light {
+				constructor(posiX,posiY,posiZ) {
+					this.element = new THREE.PointLight(0xffe4ca, 1, 475);
+					this.element.position.set(posiX, posiY, posiZ);
+					scene.add(this.element);
+					
+					//var pointLightHelper = new THREE.PointLightHelper( this.element, 5 );
+					//scene.add( pointLightHelper );
+					
+					let lamp = Light.buildLamp();
+					scene.add (lamp);
+					lamp.position.copy (this.element.position);
+					lamp.position.y = 145;
+					
+					lamp.lookAt(new THREE.Vector3(posiX,0,posiZ));
+				}
+				
+				//製作電燈
+				static buildLamp() {
+					var lampModel = new THREE.Object3D();
+					var layer2 = new THREE.Object3D();
+
+					var lamp = new THREE.Mesh (new THREE.CylinderBufferGeometry(8,5,10,32), 
+						new THREE.MeshLambertMaterial());
+					layer2.add (lamp);
+					lampModel.add (layer2);
+					layer2.rotation.x = Math.PI/2;
+					return lampModel;
+				}
+				
+				turnOff() {
+					this.element.intensity = 0.1;
+				}
+				
+				turnOn(volume) {
+					this.element.intensity = volume;
+				}
+				
+				lightChange(volume) {
+					//console.log(volume);
+					this.element.intensity = volume;
+				}
+			}
+			
+			//聚光燈(spotLight)物件
+			class Light_spot {
+				constructor(spotX,spotY,spotZ,cubeX,cubeY,cubeZ) {
+					var helper;
+					this.element = new THREE.SpotLight ();
+					this.element.position.set (spotX,spotY,spotZ);
+					this.element.angle = 1;
+					this.element.penumbra = 0.4;
+					this.element.distance = 200;
+					this.element.intensity = 1;
+					this.element.penumbra = 1;
+					this.element.decay = 1;
+					scene.add (this.element);
+					//scene.add (helper = new THREE.SpotLightHelper (this.element, 3));
+					
+					let lamp = Light_spot.buildLamp();
+					scene.add (lamp);
+					lamp.position.copy (this.element.position);
+					
+					var cubeGeometry = new THREE.BoxBufferGeometry (0,0,0);
+					var cubeMaterial = new THREE.MeshLambertMaterial ();
+					var cube = new THREE.Mesh (cubeGeometry, cubeMaterial);
+					cube.position.set (0, 10, 0);
+					scene.add (cube);
+					
+					this.element.target = cube;
+					cube.position.set (cubeX,cubeY,cubeZ);
+					
+					//render();
+					//helper.update();
+					lamp.lookAt (cube.position);
+				}
+				
+				static buildLamp() {
+					var lampModel = new THREE.Object3D();
+					var layer2 = new THREE.Object3D();
+
+					var lamp = new THREE.Mesh (new THREE.CylinderBufferGeometry(8,5,10,32), 
+						new THREE.MeshLambertMaterial());
+					layer2.add (lamp);
+					lampModel.add (layer2);
+					lamp.position.y = 1;
+					layer2.rotation.x = Math.PI/2;
+					return lampModel;
+				}
+				
+				turnOff() {
+					this.element.intensity = 0;
+				}
+				
+				turnOn(volume) {
+					this.element.intensity = volume;
+				}
+				
+				lightChange(volume) {
+					//console.log(volume);
+					this.element.intensity = volume;
+				}
+			}
+
+			//牆面物件
+			class Wall {
+				constructor(boxX,boxY,boxZ,posiX,posiY,posiZ) {
+					this.element = new THREE.Mesh(new THREE.BoxBufferGeometry(boxX,boxY,boxZ), new THREE.MeshPhongMaterial());
+					scene.add(this.element);
+					this.element.position.x = posiX;
+					this.element.position.y = posiY;
+					this.element.position.z = posiZ;
+				}
+			}
+			
+			//設計物件
+			class Design {
+				constructor(boxX,boxY,boxZ,posiX,posiY,posiZ,chairType,name) {
+					this.element = new THREE.Mesh(new THREE.BoxBufferGeometry(boxX,boxY,boxZ), new THREE.MeshPhongMaterial({
+						side: THREE.DoubleSide,
+						map: chairType
+					}));
+					scene.add(this.element);
+					this.element.position.x = posiX;
+					this.element.position.y = posiY;
+					this.element.position.z = posiZ;
+					this.element.name = name;
+				}
+			}
+			
+			//作品畫面物件
+			class Camera {
+				constructor(ww,hh,posiX,posiY,posiZ,lookX,lookY,lookZ) {
+					this.element = new THREE.PerspectiveCamera(60, ww / hh, 1, 1000);
+					this.element.position.set(posiX, posiY, posiZ);
+					this.element.lookAt(new THREE.Vector3(lookX, lookY, lookZ));
+				}
+			}
+			
+			//攝影機設計物件1
+			class Camera_Object1 {
+				constructor() {
+					this.element = new THREE.Object3D();
+					//this.element.add (new THREE.AxisHelper (40));
+					
+					var cameraBody = new THREE.Mesh (new THREE.BoxBufferGeometry (30,20,10), new THREE.MeshPhongMaterial());
+					var lens = new THREE.Mesh (new THREE.CylinderBufferGeometry (8,8,10,30), new THREE.MeshPhongMaterial());
+					lens.position.z = -5;
+					lens.rotation.x = Math.PI/2;
+					this.element.add (cameraBody, lens);
+				}
+			}
+			
+			//攝影機設計物件2
+			class Camera_Object2 {
+				constructor(posiX,posiY,posiZ,cameraObj,rotaX,rotaY,rotaZ) {
+					this.element = new THREE.Object3D();
+					this.element.add (cameraObj);
+					this.element.position.set (posiX, posiY, posiZ);
+					scene.add (this.element);
+					
+					this.element.rotation.x = rotaX;
+					this.element.rotation.y = rotaY;
+					this.element.rotation.z = rotaZ;
+					this.element.rotation.order = 'YXZ';
+				}
+			}
+			
+			//攝影機
+			var angle = 0;
+			var sign = 1;
+			var sign1 = 1;
+			
+			//畫面、電燈控制
+			var useCamera1 = 0;
+			var useCamera2 = 0;
+			var lightsOff1 = false;
+			var lightsOff2 = false;
+			var lightVolume1 = 1;
+			var lightVolume2 = 1;
+			
+			let lightness1 = document.querySelector('#intensity');
+			lightness1.addEventListener('input', function () {
+				lightVolume1 = lightness1.value;
+				if (!lightsOff1) {
+					for(var i=0;i<light.length;i++) {
+						light[i].lightChange(lightness1.value);
+					}
+				}
+			}, false);
+			
+			let lightness2 = document.querySelector('#intensity2');
+			lightness2.addEventListener('input', function () {
+				lightVolume2 = lightness2.value;
+				if (!lightsOff2) {
+					for(var i=0;i<spotLight.length;i++) {
+						spotLight[i].lightChange(lightness2.value);
+					}
+				}
+			}, false);
+
+			$('#tView1').click(function() {
+				lightsOff1 = !lightsOff1;
+			  
+				if (lightsOff1) {
+					for(var i=0;i<light.length;i++) {
+						light[i].turnOff();
+					}
+					$(this).text("關");
+				} else {
+					for(var i=0;i<light.length;i++) {
+						light[i].turnOn(lightVolume1);
+					}
+					$(this).text("開");
+				}
+			});
+			
+			$('#tView2').click(function() {
+				lightsOff2 = !lightsOff2;
+			  
+				if (lightsOff2) {
+					for(var i=0;i<spotLight.length;i++) {
+						spotLight[i].turnOff();
+					}
+					$(this).text("關");
+				} else {
+					for(var i=0;i<spotLight.length;i++) {
+						spotLight[i].turnOn(lightVolume2);
+					}
+					$(this).text("開");
+				}
+			});
+			
+			$('#chooseCamera').change(function() {
+				//console.log(this.value);
+				toggleCamera(this.value);
+			});
+			
+			$('#choosePortfolio').change(function() {
+				//console.log(this.value);
+				togglePortfolio(this.value);
+			});
+			
+			function toggleCamera(number) {
+				useCamera1 = number;
+			}
+			
+			function togglePortfolio(number) {
+				useCamera2 = number;
+			}
+		
+			var camera, scene, renderer, renderer2;
+
+			//起始畫面
+			var mouse = new THREE.Vector2();
+			var raycaster = new THREE.Raycaster();
+			var pickables = [];
+
+			//作品、攝影機畫面
+			var camera1=[];
+			var camera2=[];
+			var cameraObj1=[];
+			var cameraObj2=[];
+
+			//燈具、牆壁、椅子、作品
+			var light=[];
+			var spotLight=[];
+			var wall=[];
+			var chair=[];
+			var art=[];
+			
+			init();
+			animate();
+
+
+			function init() {
+				var ww = $("#container").innerWidth();
+				var hh = $("#container").innerHeight();
+				renderer = new THREE.WebGLRenderer();
+				renderer.setSize(ww, hh);
+				renderer.setClearColor(0x888888);
+				$("#container").append(renderer.domElement);
+
+				var ww = $("#container2").innerWidth();
+				var hh = $("#container2").innerHeight();
+				var cc = document.getElementById('mycanvas');
+				renderer2 = new THREE.WebGLRenderer({
+					canvas: cc
+				});
+				renderer2.setSize(ww, hh);
+				renderer2.setClearColor(0x888888);
+				// $("#container2").append(renderer.domElement);
+			  
+				buildScene(ww, hh);
+				window.addEventListener('resize', onWindowResize, false);
+				
+				window.addEventListener('mousedown', onDocumentMouseDown, false);
+				
+				//////////////////////////////////////////////////////////////////////////////
+				//作品展示
+				var ww1 = $("#container").innerWidth();
+				var hh1 = $("#container").innerHeight();
+				//右側作品展示
+				camera1[0] = new Camera(ww1,hh1,225,80,350,225,80,452);
+				camera1[1] = new Camera(ww1,hh1,350,80,225,452,80,225);
+				camera1[2] = new Camera(ww1,hh1,350,80,0,452,80,0);
+				camera1[3] = new Camera(ww1,hh1,350,80,-225,452,80,-225);
+				camera1[4] = new Camera(ww1,hh1,225,80,-350,225,80,-452);
+				
+				//中央作品展示
+				camera1[5] = new Camera(ww1,hh1,100,80,225,3,80,225);
+				camera1[6] = new Camera(ww1,hh1,100,80,0,3,80,0);
+				camera1[7] = new Camera(ww1,hh1,100,80,-225,3,80,-225);
+				camera1[8] = new Camera(ww1,hh1,-100,80,-225,-3,80,-225);
+				camera1[9] = new Camera(ww1,hh1,-100,80,0,-3,80,0);
+				camera1[10] = new Camera(ww1,hh1,-100,80,225,-3,80,225);
+				
+				//左側作品展示
+				camera1[11] = new Camera(ww1,hh1,-225,80,350,-225,80,452);
+				camera1[12] = new Camera(ww1,hh1,-350,80,225,-452,80,225);
+				camera1[13] = new Camera(ww1,hh1,-350,80,0,-452,80,0);
+				camera1[14] = new Camera(ww1,hh1,-350,80,-225,-452,80,-225);
+				camera1[15] = new Camera(ww1,hh1,-225,80,-350,-225,80,-452);
+				
+				//////////////////////////////////////////////////////////////////////////////
+				//攝影機
+				var ww2 = $("#container").innerWidth();
+				var hh2 = $("#container").innerHeight();
+				
+				//右側攝影機
+				camera2[0] = new THREE.PerspectiveCamera(60, ww2/hh2, 1, 1000);
+				cameraObj1[0] = new Camera_Object1();
+				cameraObj2[0] = new Camera_Object2(430, 135, 430,cameraObj1[0].element,-Math.PI/6,Math.PI/4,0);
+				
+				camera2[1] = new THREE.PerspectiveCamera(60, ww2/hh2, 1, 1000);
+				cameraObj1[1] = new Camera_Object1();
+				cameraObj2[1] = new Camera_Object2(30, 135, -430,cameraObj1[1].element,-Math.PI/6,-Math.PI*3/4,0);
+				
+				
+				//左側攝影機
+				camera2[2] = new THREE.PerspectiveCamera(60, ww2/hh2, 1, 1000);
+				cameraObj1[2] = new Camera_Object1();
+				cameraObj2[2] = new Camera_Object2(-430, 135, 430,cameraObj1[2].element,-Math.PI/6,-Math.PI/4,0);
+				
+				camera2[3] = new THREE.PerspectiveCamera(60, ww2/hh2, 1, 1000);
+				cameraObj1[3] = new Camera_Object1();
+				cameraObj2[3] = new Camera_Object2(-30, 135, -430,cameraObj1[3].element,-Math.PI/6,Math.PI*3/4,0);
+				
+				//////////////////////////////////////////////////////////////////////////////
+				//牆面
+				//右側牆面
+				wall[0] = new Wall(10, 150, 920, 455, 75, 0);
+			  
+				//中間牆面
+				wall[1] = new Wall(10, 150, 820, 0, 75, 50);
+				wall[2] = new Wall(10, 150, 20, 0, 75, -440);
+				wall[3] = new Wall(10, 30, 80, 0, 135, -390);
+			  
+				//左側牆面
+				wall[4] = new Wall(10, 150, 920, -455, 75, 0);
+			  
+				//正面牆面
+				wall[5] = new Wall(820, 150, 10, -50, 75, 455);
+				wall[6] = new Wall(20, 150, 10, 450, 75, 455);
+				wall[7] = new Wall(80, 30, 10, 400, 135, 455);
+			  
+				//背面牆面
+				wall[8] = new Wall(920, 150, 10, 0, 75, -455);
+			  
+				//////////////////////////////////////////////////////////////////////////////
+				//地面
+				let loader = new THREE.TextureLoader();
+				loader.crossOrigin = '';
+				texture = loader.load('https://i.imgur.com/AtF0mSB.jpg');
+				texture.repeat.set (2,2);
+				texture.wrapS = texture.wrapT = true;
+			  
+				let floor = new THREE.Mesh(new THREE.PlaneGeometry(920, 920), new THREE.MeshPhongMaterial({
+					side: THREE.DoubleSide,
+					map: texture
+				}));
+				scene.add(floor);
+				floor.rotation.x = -Math.PI / 2;
+			  
+				//////////////////////////////////////////////////////////////////////////////
+				//長椅材質
+				let chairtexture1 = loader.load('https://i.imgur.com/7q5CiMW.jpg');
+				chairtexture1.wrapS = chairtexture1.wrapT = true;
+			  
+				let chairtexture2 = loader.load('https://i.imgur.com/nMT3ag9.jpg');
+				chairtexture2.wrapS = chairtexture1.wrapT = true;
+			  
+				//右側長椅
+				chair[0] = new Design(60, 10, 300, 245, 65, 0, chairtexture1);
+				chair[1] = new Design(60, 60, 10, 245, 30, 145, chairtexture2);
+				chair[2] = new Design(60, 60, 10, 245, 30, -145, chairtexture2);
+			  
+				//左側長椅
+				chair[3] = new Design(60, 10, 300, -245, 65, 0, chairtexture1);
+				chair[4] = new Design(60, 60, 10, -245, 30, 145, chairtexture2);
+				chair[5] = new Design(60, 60, 10, -245, 30, -145, chairtexture2);
+				
+				//////////////////////////////////////////////////////////////////////////////
+				//電燈
+				//右側電燈
+				light[0]=new Light(112.5, 150, 225);
+				light[1]=new Light(337.5, 150, 225);
+				light[2]=new Light(112.5, 150, -225);
+				light[3]=new Light(337.5, 150, -225);
+			  
+				//左側電燈
+				light[4]=new Light(-112.5, 150, 225);
+				light[5]=new Light(-337.5, 150, 225);
+				light[6]=new Light(-112.5, 150, -225);
+				light[7]=new Light(-337.5, 150, -225);
+			  
+				//////////////////////////////////////////////////////////////////////////////
+				//聚光燈
+				//右側聚光燈
+				spotLight[0]=new Light_spot(350,140,225,450,100,225);
+				spotLight[1]=new Light_spot(350,140,0,450,100,0);
+				spotLight[2]=new Light_spot(350,140,-225,450,100,-225);
+				spotLight[3]=new Light_spot(225,140,350,225,100,450);
+				spotLight[4]=new Light_spot(225,140,-350,225,100,-450);
+			  
+			  
+				//中央聚光燈
+				spotLight[5]=new Light_spot(-100,140,225,0,100,225);
+				spotLight[6]=new Light_spot(100,140,0,0,100,0);
+				spotLight[7]=new Light_spot(100,140,225,0,100,225);
+				spotLight[8]=new Light_spot(-100,140,-225,0,100,-225);
+				spotLight[9]=new Light_spot(-100,140,0,0,100,0);
+				spotLight[10]=new Light_spot(100,140,-225,0,100,-225);
+			  
+				//左側聚光燈
+				spotLight[11]=new Light_spot(-350,140,225,-450,100,225);
+				spotLight[12]=new Light_spot(-350,140,0,-450,100,0);
+				spotLight[13]=new Light_spot(-350,140,-225,-450,100,-225);
+				spotLight[14]=new Light_spot(-225,140,350,-225,100,450);
+				spotLight[15]=new Light_spot(-225,140,-350,-225,100,-450);
+			  
+				//////////////////////////////////////////////////////////////////////////////
+				//作品
+				var arttexture = [];
+				//右側作品圖
+				arttexture[0] = loader.load('https://i.imgur.com/3eFueWD.jpg');
+				arttexture[1] = loader.load('https://i.imgur.com/70K7d2w.jpg');
+				arttexture[2] = loader.load('https://i.imgur.com/ocYgRN5.jpg');
+				arttexture[3] = loader.load('https://i.imgur.com/ve2qVA3.jpg');
+				arttexture[4] = loader.load('https://i.imgur.com/gLOlO3p.jpg');
+			  
+				//中央作品圖
+				arttexture[5] = loader.load('https://i.imgur.com/P8qkYI0.jpg');
+				arttexture[6] = loader.load('https://i.imgur.com/AhOqS6u.jpg');
+				arttexture[7] = loader.load('https://i.imgur.com/CYUQ4M5.jpg');
+				arttexture[8] = loader.load('https://i.imgur.com/oLJYBY0.jpg');
+				arttexture[9] = loader.load('https://i.imgur.com/K34rUHI.jpg');
+				arttexture[10] = loader.load('https://i.imgur.com/Qb61tQ2.jpg');
+			  
+				//左側作品圖
+				arttexture[11] = loader.load('https://i.imgur.com/OyHHX53.jpg');
+				arttexture[12] = loader.load('https://i.imgur.com/WOMF61M.jpg');
+				arttexture[13] = loader.load('https://i.imgur.com/k32u2Do.jpg');
+				arttexture[14] = loader.load('https://i.imgur.com/fQRTHTF.jpg');
+				arttexture[15] = loader.load('https://i.imgur.com/IpGrAj5.jpg');
+			  
+				arttexture.wrapS = arttexture.wrapT = true;
+				//右側作品
+				art[0] = new Design(5, 100, 100, 452, 80, 0, arttexture[0],
+					"<p>畫 名 ： 阿爾附近的吊橋 The Langlois Bridge at Arles</p>"+
+					"<p>作 者 ： 梵谷 Vincent Van Gogh</p>"+
+					"<p>年 份 ： 1888 年</p>"+
+					"<p>原 作 材 質 ： 油彩．畫布 Oil on canvas</p>"+
+					"<p>館 藏 處 ： 德國科隆華拉夫理查茲博物館 Wallraf Richartz Museum, Cologne</p>");
+				art[1] = new Design(5, 100, 100, 452, 80, 225, arttexture[1],
+					"<p>畫 名 ： 佛利貝爾傑酒店 A Bar at the Folies-Bergeres</p>"+
+					"<p>作 者 ： 馬奈 Edouard Manet</p>"+
+					"<p>年 份 ： 1881 - 82 年</p>"+
+					"<p>原 作 材 質 ： 油彩．畫布 Oil on canvas</p>"+
+					"<p>館 藏 處 ： 英國倫敦可陶德學院畫廊 Courtauld Institute Galleries, London</p>");
+				art[2] = new Design(5, 100, 100, 452, 80, -225, arttexture[2],
+					"<p>畫 名 ： 塞納河風光 The Basin at Argenteuil</p>"+
+					"<p>作 者 ： 莫內 Claude Monet</p>"+
+					"<p>年 份 ： 1872 年</p>"+
+					"<p>原 作 材 質 ： 油彩．畫布 Oil on canvas</p>"+
+					"<p>館 藏 處 ： 法國巴黎羅浮宮 Musee du Louvre, Paris</p>");
+				art[3] = new Design(100, 100, 5, 225, 80, 452, arttexture[3],
+					"<p>畫 名 ： 拾穗 Les Gleanuses Salon (The Gleaners)</p>"+
+					"<p>作 者 ： 米勒 Jean Francois Millet</p>"+
+					"<p>年 份 ： 1857 年</p>"+
+					"<p>原 作 材 質 ： 油彩．畫布 Oil on canvas</p>"+
+					"<p>館 藏 處 ： 法國巴黎奧賽美術館 Musee d'Orsay, Paris</p>");
+				art[4] = new Design(100, 100, 5, 225, 80, -452, arttexture[4],
+					"<p>畫 名 ： 遮蔽的早晨 Morning, An Overcast Day, Rouen</p>"+
+					"<p>作 者 ： 畢莎羅 Camille Pissarro</p>"+
+					"<p>年 份 ： 1896 年</p>"+
+					"<p>原 作 材 質 ： 油彩．畫布 Oil on canvas</p>"+
+					"<p>館 藏 處 ： 美國紐約大都會美術館 Metropolitan Museum of Art, New York</p>");
+			  
+				//中央作品
+				art[5] = new Design(5, 100, 100, 3, 80, 0, arttexture[5],
+					"<p>畫 名 ： 傑克島的風光 The Seine with the Pont de la Grande Jatte</p>"+
+					"<p>作 者 ： 梵谷 Vincent Van Gogh</p>"+
+					"<p>年 份 ： 1887 年</p>"+
+					"<p>原 作 材 質 ： 油彩．畫布 Oil on canvas</p>"+
+					"<p>館 藏 處 ： 荷蘭阿姆斯特丹梵谷美術館 Van Gogh Museum, Amsterdam</p>");
+				art[6] = new Design(5, 100, 100, 3, 80, 225, arttexture[6],
+					"<p>畫 名 ： 花開滿原野 Field with Flowers near Arles</p>"+
+					"<p>作 者 ： 梵谷 Vincent Van Gogh</p>"+
+					"<p>年 份 ： 1888 年</p>"+
+					"<p>原 作 材 質 ： 油彩．畫布 Oil on canvas</p>"+
+					"<p>館 藏 處 ： 荷蘭阿姆斯特丹梵谷美術館 Van Gogh Museum, Amsterdam</p>");
+				art[7] = new Design(5, 100, 100, 3, 80, -225, arttexture[7],
+					"<p>畫 名 ： 乾草車 The haywain</p>"+
+					"<p>作 者 ： 康斯塔伯 John Constable</p>"+
+					"<p>年 份 ： 1821 年</p>"+
+					"<p>原 作 材 質 ： 油彩．畫布 Oil on canvas</p>"+
+					"<p>館 藏 處 ： 英國倫敦國家畫廊 National Gallery, London</p>");
+				art[8] = new Design(5, 100, 100, -3, 80, 0, arttexture[8],
+					"<p>畫 名 ： 法式茶園 The French Tea Garden (The Terre-Cuite Tea Set)</p>"+
+					"<p>作 者 ： 哈山姆 Childe Hassam</p>"+
+					"<p>年 份 ： 1910 年</p>"+
+					"<p>原 作 材 質 ： 油彩．畫布 Oil on canvas</p>"+
+					"<p>館 藏 處 ： 美國田納西州漢特美國藝術博物館 Hunter Museum of American Art, Chattanooga</p>");
+				art[9] = new Design(5, 100, 100, -3, 80, 225, arttexture[9],
+					"<p>畫 名 ： 船上的午宴 Luncheon of the Boating Party</p>"+
+					"<p>作 者 ： 雷諾瓦 Pierre Auguste Renoir</p>"+
+					"<p>年 份 ： 1880 - 81 年</p>"+
+					"<p>原 作 材 質 ： 油彩．畫布 Oil on canvas</p>"+
+					"<p>館 藏 處 ： 私人菲利浦收藏 The Phillips Collection, Washington, D.C.</p>");
+				art[10] = new Design(5, 100, 100, -3, 80, -225, arttexture[10],
+					"<p>畫 名 ： 鳶尾花 Irises</p>"+
+					"<p>作 者 ： 梵谷 Vincent Van Gogh</p>"+
+					"<p>年 份 ： 1889 年</p>"+
+					"<p>原 作 材 質 ： 油彩．畫布 Oil on canvas</p>"+
+					"<p>館 藏 處 ： 美國加州保羅蓋茲美術館 J. Paul Getty Museum, Los Angeles</p>");
+			  
+				//左側作品
+				art[11] = new Design(5, 100, 100, -452, 80, 0, arttexture[11],
+					"<p>畫 名 ： 巴黎郊外 On the Outskirts of Paris</p>"+
+					"<p>作 者 ： 梵谷 Vincent Van Gogh</p>"+
+					"<p>年 份 ： 1887 年</p>"+
+					"<p>原 作 材 質 ： 油彩．畫布 Oil on canvas</p>"+
+					"<p>館 藏 處 ： 私人收藏 private collection</p>");
+				art[12] = new Design(5, 100, 100, -452, 80, 225, arttexture[12],
+					"<p>畫 名 ： 莫瑞橋 The Bridge at Moret</p>"+
+					"<p>作 者 ： 希斯里 Alfred Sisley</p>"+
+					"<p>年 份 ： 1893 年</p>"+
+					"<p>原 作 材 質 ： 油彩．畫布 Oil on canvas</p>"+
+					"<p>館 藏 處 ： 法國巴黎奧塞美術館 Musee d'Orsay, Paris</p>");
+				art[13] = new Design(5, 100, 100, -452, 80, -225, arttexture[13],
+					"<p>畫 名 ： 蒙梭公園 Landscape：The Parc Monceau</p>"+
+					"<p>作 者 ： 莫內 Claude Monet</p>"+
+					"<p>年 份 ： 1876 年</p>"+
+					"<p>原 作 材 質 ： 油彩．畫布 Oil on canvas</p>"+
+					"<p>館 藏 處 ： 美國紐約大都會美術館 Metropolitan Museum of Art, New York</p>");
+				art[14] = new Design(100, 100, 5, -225, 80, 452, arttexture[14],
+					"<p>畫 名 ： 煎餅磨坊 Dance at Le Moulin de la Galette, Montmartre</p>"+
+					"<p>作 者 ： 雷諾瓦 Pierre Auguste Renoir</p>"+
+					"<p>年 份 ： 1876 年</p>"+
+					"<p>原 作 材 質 ： 油彩．畫布 Oil on canvas</p>"+
+					"<p>館 藏 處 ： 法國巴黎奧塞美術館 Musee d'Orsay, Paris</p>");
+				art[15] = new Design(100, 100, 5, -225, 80, -452, arttexture[15],
+					"<p>畫 名 ： 睡蓮池：粉紅色的和諧 Waterlily Pond：Pink Harmony</p>"+
+					"<p>作 者 ： 莫內 Claude Monet</p>"+
+					"<p>年 份 ： 1900 年</p>"+
+					"<p>原 作 材 質 ： 油彩．畫布 Oil on canvas</p>"+
+					"<p>館 藏 處 ： 法國巴黎奧塞美術館 Musee d'Orsay, Paris</p>");
+				
+				for(let i=0;i<art.length;i++) {
+					pickables.push (art[i].element);
+				}
+			}
+
+			function buildScene(ww, hh) {
+				scene = new THREE.Scene();
+				scene = new THREE.Scene();
+				camera = new THREE.PerspectiveCamera(50, ww / hh, 1, 10000);
+				//camera.position.z = 500;
+				camera.position.y = 400;
+				camera.position.z = 600;
+
+				var gridXZ = new THREE.GridHelper(200, 20, 'red', 'white');
+				//gridXZ.rotation.x = Math.PI / 2;
+				//scene.add(gridXZ);
+
+				controls = new THREE.OrbitControls(camera, renderer.domElement);
+			}
+
+			function onWindowResize() {
+				var ww = $("#container").innerWidth();
+				var hh = $("#container").innerHeight();
+
+				camera.aspect = ww / hh;
+				camera.updateProjectionMatrix();
+				renderer.setSize(ww, hh);
+
+				ww = $("#container2").innerWidth();
+				hh = $("#container2").innerHeight();
+				renderer2.setSize(ww, hh);
+
+			}
+			
+			function onDocumentMouseDown(event) {
+				var viewportPos =$('#container').get(0).getBoundingClientRect(); 
+				mouse.x = ((event.clientX - viewportPos.left) / $('#container').innerWidth()) * 2 - 1;
+				mouse.y = -((event.clientY - viewportPos.top) / $('#container').innerHeight()) * 2 + 1;
+
+				raycaster.setFromCamera(mouse, camera);
+				var intersects = raycaster.intersectObjects (pickables);
+				if (intersects.length > 0) {
+					document.getElementById("content_write").innerHTML=intersects[0].object.name;
+				}
+			}
+
+			function animate() {
+				requestAnimationFrame(animate);
+				
+				//////////////////////////////////////////////////////////////////////////////
+				//作品展示畫面
+				let nowCamera1;
+				switch(useCamera2) {
+					case "1":
+						nowCamera1 = camera1[0].element;
+						break;
+					case "2":
+						nowCamera1 = camera1[1].element;
+						break;
+					case "3":
+						nowCamera1 = camera1[2].element;
+						break;
+					case "4":
+						nowCamera1 = camera1[3].element;
+						break;
+					case "5":
+						nowCamera1 = camera1[4].element;
+						break;
+					case "6":
+						nowCamera1 = camera1[5].element;
+						break;
+					case "7":
+						nowCamera1 = camera1[6].element;
+						break;
+					case "8":
+						nowCamera1 = camera1[7].element;
+						break;
+					case "9":
+						nowCamera1 = camera1[8].element;
+						break;
+					case "10":
+						nowCamera1 = camera1[9].element;
+						break;
+					case "11":
+						nowCamera1 = camera1[10].element;
+						break;
+					case "12":
+						nowCamera1 = camera1[11].element;
+						break;
+					case "13":
+						nowCamera1 = camera1[12].element;
+						break;
+					case "13":
+						nowCamera1 = camera1[12].element;
+						break;
+					case "14":
+						nowCamera1 = camera1[13].element;
+						break;
+					case "15":
+						nowCamera1 = camera1[14].element;
+						break;
+					case "16":
+						nowCamera1 = camera1[15].element;
+						break;
+					default:
+						nowCamera1 = camera;
+				}
+				//console.log(useCamera2);
+				
+				//////////////////////////////////////////////////////////////////////////////
+				//攝影機、攝影機鏡頭控制
+				angle += 0.003*sign;
+				
+				if (angle > 0.3 || angle < -0.3) {
+					sign *= -1;
+				}
+				//console.log(angle);
+				
+				for(let i=0;i<camera2.length;i++) {
+					cameraObj1[i].element.rotation.y = angle;
+					camera2[i].matrixWorld.copy (cameraObj1[i].element.matrixWorld);
+					camera2[i].matrixAutoUpdate = false;
+				}
+				
+				let nowCamera;
+				switch(useCamera1) {
+					case "1":
+						nowCamera = camera2[0];
+						break;
+					case "2":
+						nowCamera = camera2[1];
+						break;
+					case "3":
+						nowCamera = camera2[2];
+						break;
+					case "4":
+						nowCamera = camera2[3];
+						break;
+					default:
+						nowCamera = camera;
+				}
+				
+				//////////////////////////////////////////////////////////////////////////////
+				renderer.render(scene, nowCamera1);
+				renderer2.render(scene, nowCamera);
+			}
+		</script>
+	</body>
+</html>
