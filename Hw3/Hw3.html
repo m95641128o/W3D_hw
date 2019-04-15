@@ -9,7 +9,7 @@
 	</head>
 	<body>
 		<h1 style="font-size:2em; text-align:center; margin:15px"> 
-				西方油畫藝術展
+			西方油畫藝術展
 		</h1>
 		<hr>
 		<div id="main1">
@@ -495,21 +495,21 @@
 				//右側攝影機
 				camera2[0] = new THREE.PerspectiveCamera(60, ww2/hh2, 1, 1000);
 				cameraObj1[0] = new Camera_Object1();
-				cameraObj2[0] = new Camera_Object2(430, 135, 430,cameraObj1[0].element,-Math.PI/6,Math.PI/4,0);
+				cameraObj2[0] = new Camera_Object2(430, 135, 430,cameraObj1[0].element,-Math.PI/10,Math.PI/4,0);
 				
 				camera2[1] = new THREE.PerspectiveCamera(60, ww2/hh2, 1, 1000);
 				cameraObj1[1] = new Camera_Object1();
-				cameraObj2[1] = new Camera_Object2(30, 135, -430,cameraObj1[1].element,-Math.PI/6,-Math.PI*3/4,0);
+				cameraObj2[1] = new Camera_Object2(30, 135, -430,cameraObj1[1].element,-Math.PI/10,-Math.PI*3/4,0);
 				
 				
 				//左側攝影機
 				camera2[2] = new THREE.PerspectiveCamera(60, ww2/hh2, 1, 1000);
 				cameraObj1[2] = new Camera_Object1();
-				cameraObj2[2] = new Camera_Object2(-430, 135, 430,cameraObj1[2].element,-Math.PI/6,-Math.PI/4,0);
+				cameraObj2[2] = new Camera_Object2(-430, 135, 430,cameraObj1[2].element,-Math.PI/10,-Math.PI/4,0);
 				
 				camera2[3] = new THREE.PerspectiveCamera(60, ww2/hh2, 1, 1000);
 				cameraObj1[3] = new Camera_Object1();
-				cameraObj2[3] = new Camera_Object2(-30, 135, -430,cameraObj1[3].element,-Math.PI/6,Math.PI*3/4,0);
+				cameraObj2[3] = new Camera_Object2(-30, 135, -430,cameraObj1[3].element,-Math.PI/10,Math.PI*3/4,0);
 				
 				//////////////////////////////////////////////////////////////////////////////
 				//牆面
@@ -843,10 +843,19 @@
 				
 				//////////////////////////////////////////////////////////////////////////////
 				//攝影機、攝影機鏡頭控制
-				angle += 0.003*sign;
-				
-				if (angle > 0.3 || angle < -0.3) {
-					sign *= -1;
+				if(sign != 0) {
+					angle += 0.002*sign;
+					if (angle > 0.3 || angle < -0.3) {
+						sign1 = sign;
+						sign = 0;
+						
+						setTimeout(function(){
+							sign = sign1;
+							if (angle > 0.3 || angle < -0.3) {
+								sign *= -1;
+							}
+						},1500);
+					}
 				}
 				//console.log(angle);
 				
