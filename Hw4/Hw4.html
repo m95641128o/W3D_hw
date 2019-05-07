@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/84/three.min.js"></script>
+		<title>Homework 4</title>
+	</head>
+	<body>
+		<h1 style="text-align:center">
+			Homework 4
+		</h1>
+
+		<hr>
+		<table style="margin-left:9%;" border="0px">
+			<tr>
+				<td>
+					<div id="container" style="float:left; margin:3px; width:82.5vh; height:82.5vh">
+					</div>
+				</td>
+				<td>
+					<div id="info" style="float:left; margin-left: 30px; width:32vw;">
+						<table style="border-radius:10px;" border="0px">
+							<tr align=center>
+								<td colspan=2>圓形位置</td>
+							</tr>
+							<tr align=center>
+								<td>
+									X: <input id="cirX" style="width:10vw" type="text" value="0">
+								</td>
+								<td>
+									Y: <input id="cirY" style="width:10vw" type="text" value="0">
+								</td>
+							</tr>
+							
+							
+							<tr align=center>
+								<td colspan=2>矩形位置</td>
+							</tr>
+							<tr align=center>
+								<td>
+									X: <input id="recX" style="width:10vw" type="text" value="0">
+								</td>
+								<td>
+									Y: <input id="recY" style="width:10vw" type="text" value="0">
+								</td>
+							</tr>
+							
+							<tr align=center>
+								<td colspan=2>圓形半徑</td>
+							</tr>
+							<tr align=center>
+								<td>
+									<input type="range" min=1 max=10 step=0.1 id="intensity">
+								</td>
+								<td>
+									<input id="radius" style="width:10vw" type="text" value="0">
+								</td>
+							</tr>
+							
+							<tr><td><br></td></tr>
+							<tr align=center>
+								<td>碰撞後發出聲響/提示:</td>
+								<td align=left>
+									<input id="hint" type="checkbox">
+									<span id='greeting' style="color:#ff8103">　</span>
+								</td>
+							</tr>
+							
+							<tr align=center>
+								<td colspan=2>
+									<button id="toggle" style="width:10vw;font-family:Microsoft JhengHei;font-weight:bold;">
+										開始/暫停
+									</button>
+								</td>
+							</tr>
+						</table>
+					</div>
+				</td>
+		</table>
+		
+		<style>
+			body{
+				background-image:url("https://i.imgur.com/J7EZqxi.jpg");
+				//background-repeat:repeat-y;
+				font-family:Microsoft JhengHei;
+				font-weight:bold;
+			}
+			
+			#info td{
+				padding-top:10px;
+			}
+		</style>
+		
+		<script>
+			$('#toggle').click ( function() {
+				motion = !motion;
+				//console.log (motion)
+			});
+			
+			$('#hint').click ( function() {
+				hint = !hint;
+				//console.log(hint);
+			});
+			
+			radius = document.querySelector('#intensity');
+			radius.addEventListener('input', function () {
+				circle.changeRadius(radius.value);
+				//console.log(radius.value);
+			}, false);
+			
+			class Circle {
+				constructor(radius) {
+					this.element = new THREE.Mesh (new THREE.CircleGeometry (radius,20), new THREE.MeshBasicMaterial({
+						color:0xff8103
+					}));
+					
+					scene.add (this.element);
+				}
+				
+				changeRadius(radius){
+					scene.remove(this.element);
+					
+					this.element = new THREE.Mesh (new THREE.CircleGeometry (radius,20), new THREE.MeshBasicMaterial({
+						color:0xff8103
+					}));
+					
+					scene.add (this.element);
+				}
+				
+				changeColor(radius){
+					scene.remove(this.element);
+					
+					this.element = new THREE.Mesh (new THREE.CircleGeometry (radius,20), new THREE.MeshBasicMaterial({
+						color:0xffff00
+					}));
+					
+					scene.add (this.element);
+				}
+			}
+
+			var camera, scene, renderer, circle, radius;
+			var scene = new THREE.Scene();
+			var pos, vel;
+			var puck;
+			var pickplane;
+			var raycaster = new THREE.Raycaster();
+			var mouse = new THREE.Vector2();
+			var motion = true;
+			var hint = false;
+			var intersectCount = false;
+
+			init();
+			animate();
+			
+
+			function init() {
+
+				var ww = $("#container").innerWidth();
+				var hh = $("#container").innerHeight();
+				renderer = new THREE.WebGLRenderer();
+				renderer.setSize(ww, hh);
+				renderer.setClearColor(0x888888);
+				$("#container").append(renderer.domElement);
+			  
+				////////////////////////////////////////////////
+				//矩形
+				pickplane = new THREE.Mesh(new THREE.PlaneGeometry(200, 200),
+					new THREE.MeshBasicMaterial({
+						color: 0xffff23
+					}));
+				scene.add(pickplane);
+				pickplane.material.visible = false;
+				
+				puck = new THREE.Mesh(new THREE.PlaneBufferGeometry(30, 10), new THREE.MeshBasicMaterial());
+				scene.add(puck);
+				
+				var lightness1 = document.querySelector('#container');
+				
+				$("#container").on("mousedown",function(){
+					lightness1.addEventListener('mousedown',onDocumentMouseMove, false);
+					lightness1.addEventListener('mousemove',onDocumentMouseMove, false);
+					
+					$("#container").on("mouseup",function(){
+						lightness1.removeEventListener('mousemove',onDocumentMouseMove, false);
+						lightness1.addEventListener('mouseup',onDocumentMouseMove, false);
+					});
+				});
+				
+				pos1 = new THREE.Vector3();
+				////////////////////////////////////////////////
+				//圓形
+				camera = new THREE.OrthographicCamera (-50,50,50,-50,1, 1000);
+				camera.position.z = 500;
+				
+				radius.value = 5;
+				circle = new Circle(radius.value);
+				
+				pos = new THREE.Vector3();
+				vel = new THREE.Vector3(5,4,0);
+				
+				window.addEventListener('resize', onWindowResize, false);
+				
+			}
+			
+			function onDocumentMouseMove(event) {	
+				event.preventDefault();
+				
+				var viewportPos = $('#container').get(0).getBoundingClientRect();
+				mouse.x = ((event.clientX - viewportPos.left) / $('#container').innerWidth()) * 2 - 1;
+				mouse.y = -((event.clientY - viewportPos.top) / $('#container').innerHeight()) * 2 + 1;
+
+				raycaster.setFromCamera(mouse, camera);
+				var intersects = raycaster.intersectObject(pickplane);
+				if (intersects.length > 0) {
+					puck.position.copy(intersects[0].point);
+				}
+			}
+
+			function onWindowResize() {
+				var ww = $("#container").innerWidth();
+				var hh = $("#container").innerHeight();
+
+				camera.aspect = ww / hh;
+				camera.updateProjectionMatrix();
+				renderer.setSize(ww, hh);
+			}
+			
+			function getPos () {
+				// Call api 
+				// Need to be replaced by a public ip address
+				$.get( "http://127.0.0.1:1337/api?cirX="+pos.x+"&cirY="+ pos.y+"&recX="+ 
+						puck.position.x+"&recY="+ puck.position.y+"&Rad="+ radius.value, function( data ) {
+					
+					if(data && data.output){
+						var coords = data.output.split (" ");
+						$('#cirX').val(coords[0]);
+						$('#cirY').val(coords[1]);
+						$('#recX').val(coords[2]);
+						$('#recY').val(coords[3]);
+						$('#radius').val(coords[4]);
+						
+						if(hint) {
+							if(coords[5] == 1) {
+								$('#greeting').text("撞到!");
+								circle.changeColor(radius.value);
+								if(intersectCount == false) {
+									showSound("pianoC.mp3");
+									intersectCount = true;
+								}
+							} else {
+								$("#greeting").text("　");
+								circle.changeRadius(radius.value);
+								intersectCount = false;
+							}
+						} else {
+							circle.changeRadius(radius.value);
+							$("#greeting").text("　");
+							intersectCount = false;
+						}
+					}
+					
+				});
+			}
+
+			function animate() {
+				dt = motion ? 0.1 : 0;
+				pos.add (vel.clone().multiplyScalar(dt));
+			  
+				if (Math.abs(pos.x) > 50-radius.value) {
+					vel.x *= -1;  	
+				}
+				if (Math.abs(pos.y) > 50-radius.value) {
+					vel.y *= -1;  	
+				}
+
+				getPos();
+				
+				circle.element.position.copy (pos);
+				/*
+				$('#cirX').val(pos.x);
+				$('#cirY').val(pos.y);
+				$('#recX').val(puck.position.x);
+				$('#recY').val(puck.position.y);
+				$('#radius').val(radius.value);
+				*/
+				requestAnimationFrame(animate);
+				render();
+			}
+			
+			function showSound(audioSrc) {
+				
+				$("#hintmusic").remove();
+				
+				let audioJQ = $("<audio src='" + audioSrc + "' autoplay id='hintmusic'/>");
+				audioJQ.appendTo("body");
+			}
+
+
+			function render() {
+				renderer.render(scene, camera);
+			}
+		</script>
+	</body>
+</html>
