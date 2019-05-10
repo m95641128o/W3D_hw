@@ -245,7 +245,7 @@
 								$('#greeting').text("撞到!");
 								circle.changeColor(radius.value);
 								if(intersectCount == false) {
-									showSound("pianoC.mp3");
+									showSound("https://m95641128o.github.io/W3D_hw/Hw4/pianoC.mp3");
 									intersectCount = true;
 								}
 							} else {
@@ -293,6 +293,8 @@
 				$("#hintmusic").remove();
 				
 				let audioJQ = $("<audio src='" + audioSrc + "' autoplay id='hintmusic'/>");
+				//let audioJQ = $("<embed src='" + audioSrc +"' autostart=true hidden=true id='hintmusic'/>");
+
 				audioJQ.appendTo("body");
 			}
 
