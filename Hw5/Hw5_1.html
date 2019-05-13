@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+		<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+		<script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
+		<title>Homework 5</title>
+	</head>
+	<body>
+		<div class="section" id="store_info" style="margin-top:10%;">
+			<div class="row container">
+				<form class="col s12 m12 welcome" action="change" method="get">
+					<div class="row">
+						<h1 align=center> Welcome </h1>
+						<div class="input-field col s12 m12">
+							<input id="username" class="materialize-textarea" type="text" name="name" required>
+							<label for="username">請輸入您的暱稱(英文名稱)</label>
+							<button id="submit" class="btn grey darken-2" type="submit">
+								登入
+							</button>
+						</div>
+					</div>
+				</form>
+			</div>
+		</div>
+		
+		<style>
+			body{
+				font: 13px;
+				font-family:Microsoft JhengHei;
+				font-weight:bold;
+				background-image:url("https://i.imgur.com/OKOoVL4.jpg");
+			}
+			
+			h1{
+				font-size: 60px;
+				font-family:Microsoft JhengHei;
+				font-weight:bold;
+			}
+			
+			p{
+				font-size: 20px;
+				margin:10px auto;
+				//left:50%;
+			}
+			
+			#username{
+				font-family:Microsoft JhengHei;
+				font-weight:bold;
+			}
+			
+			#submit{
+				//left:50%;
+				font-family:Microsoft JhengHei;
+				font-weight:bold;
+				font-size:16px;
+			}
+			
+			.welcome{
+				background-color:rgba(255,255,255,0.3);
+				border-radius:10px;
+			}
+		</style>
+		
+		<script>
+			$(function () {
+				//本機端使用
+				//var socket = io.connect ('http://localhost');
+				//var socket = io.connect ('http://localhost:1337');
+				
+				//網路端使用
+				var socket = io.connect('http://7e791f1f.ngrok.io');
+				
+				$(document).ready(function() {
+					$('#username').val('');
+					M.textareaAutoResize($('#username'));
+					
+					socket.emit('connect_repeat');
+				});
+				
+				//連線失敗
+				socket.on('connect_repeat', function(nameRepeat){
+					if(nameRepeat){
+						alert("暱稱重複，請換其他暱稱");
+					}
+				});
+			});
+		</script>
+	</body>
+</html>

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+		<script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
+		<script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+		<title>Homework 5</title>
+	</head>
+	<body>
+		<br>
+		<h1 id='title' align=center style="color:#9e9e9e;"></h1>
+		<hr>
+		<div style="background-color:rgba(255,255,255,0.3);">
+			<input id="hint" type="checkbox" style="margin:10px;">關閉提醒
+			<ul id="messages"></ul>
+			<form action="">
+				<input id="m" autocomplete="off" style="font-family:Microsoft JhengHei;font-weight:bold;"/>
+				<button id="Send" style="font-family:Microsoft JhengHei;font-weight:bold;">輸入</button>
+			</form>
+			<button id="Delete" style="font-family:Microsoft JhengHei;font-weight:bold;">刪除</button>
+		</div>
+		<style>
+			* { margin: 0; padding: 0; box-sizing: border-box; }
+			/*body { font: 13px Helvetica, Arial; }*/
+			body { font: 13px; font-family:Microsoft JhengHei; font-weight:bold; background-image:url("https://i.imgur.com/OKOoVL4.jpg");}
+			form { background: #000; padding: 3px; position: fixed; bottom: 0; width: 100%;}
+			form input { border: 0; padding: 10px; width: 80%; margin-right: 0%; margin-left:9.8%;}
+			form #Send { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; margin-left:0.5%;}
+			#Delete { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; position: fixed; bottom: 0.45%; left: 0.4%;}
+			#messages { list-style-type: none; margin: 0; padding: 0; }
+			#messages li { padding: 5px 10px; background-color: rgba(255,255,255,0.4);}
+			#messages li:nth-child(odd) { background-color: rgba(255,255,255,0.5); }
+			#messages { margin-bottom: 40px }
+		</style>
+		
+		<script>
+			var name;
+			var hint = true;
+			var chatCount = 0;
+			
+			$('#hint').click ( function() {
+				hint = !hint;
+			});
+			
+			$(function () {
+				//本機端使用
+				//var socket = io.connect ('http://localhost');
+				//var socket = io.connect ('http://localhost:1337');
+				
+				//網路端使用
+				var socket = io.connect('http://7e791f1f.ngrok.io');
+				// or, io(); // no url is specified 
+				// default to the host serving this page
+				
+				$(document).ready(function() { // 
+					//連線
+					name = document.location.search.match(/\?name=(.+)/)[1];
+					$('#title').text (name+'，歡迎回來');
+					socket.emit('connect_info',name);
+					
+					//離線
+					$(window).unload(function(){
+						socket.emit('disconnect_info',name);
+					});
+					
+				});
+				
+				////////////////////////////////////////////////
+				//新增訊息
+				$('form').submit(function(){
+					if($('#m').val()!=''){
+						socket.emit('chat message',name,$('#m').val());
+					}
+					$('#m').val('');
+					return false;
+				});
+				
+				socket.on('chat message', function(nameChat,msg){
+					$('#messages').append($('<li>').text(nameChat+": "+msg));
+					if(hint){
+						showSound("https://m95641128o.github.io/W3D_hw/Hw5/music/message_1.mp3");
+					}
+					window.scrollTo(0, document.body.scrollHeight);
+				});
+				
+				////////////////////////////////////////////////
+				//刪除最後訊息
+				$('#Delete').on('click',function(){
+					socket.emit('delete_message',name);
+					return false;
+				});
+				
+				socket.on('delete_message', function(delete_chatName){
+					chatCount = $("#messages li").length-1;
+					$("li").eq(chatCount).remove();
+					window.scrollTo(0, document.body.scrollHeight);
+				});
+				
+				////////////////////////////////////////////////
+				//連線資訊
+				socket.on('connect_info', function(connect_name){
+					$('#messages').append($('<li>').text("(系統訊息: "+connect_name+"已上線)"));
+					if(hint){
+						showSound("https://m95641128o.github.io/W3D_hw/Hw5/music/online.mp3");
+					}
+					window.scrollTo(0, document.body.scrollHeight);
+				});
+				
+				//離線資訊
+				socket.on('disconnect_info', function(disconnect_name){
+					$('#messages').append($('<li>').text("(系統訊息: "+disconnect_name+"已離線)"));
+					if(hint){
+						showSound("https://m95641128o.github.io/W3D_hw/Hw5/music/offline.mp3");
+					}
+					window.scrollTo(0, document.body.scrollHeight);
+				});
+			});
+			
+			//提醒音效
+			function showSound(audioSrc) {
+				$("#hintmusic").remove();
+				let audioJQ = $("<audio src='" + audioSrc + "' autoplay id='hintmusic'/>");
+				audioJQ.appendTo("body");
+			}
+		</script>
+	</body>
+</html>
