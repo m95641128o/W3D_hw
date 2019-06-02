@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/84/three.min.js"></script>
+		<script src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
+		<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+		<title>Homework 6</title>
+	</head>
+
+	<body> 
+		<div id='info'>
+			傾斜迷宮
+			<br>
+			<button id='toggle' style="width:80px;margin-top:10px;font-family:Microsoft JhengHei;font-weight:bold;">雙球</button>
+		</div>
+		
+		<div id='deviceInfo'></div>
+		
+		
+		<style>
+			#info {
+				position: absolute;
+				//top: 100px;
+				width: 100%;
+				color: #ffff00;
+				text-align: center;
+			}
+			
+			#deviceInfo {
+				position: absolute;
+				bottom: 100px; width: 100%;
+				color: #ffffff;
+				text-align: center;
+			}
+			
+			body {
+				font-family:Microsoft JhengHei;
+				font-weight:bold;
+			}
+
+		</style>
+		
+		<script>
+			class Ball {
+				constructor(posiX,posiZ) {
+					this.pos = new THREE.Vector3(posiX, 0, posiZ);
+					this.vel = new THREE.Vector3();
+					this.force = new THREE.Vector3();
+					this.mesh = new THREE.Mesh(new THREE.SphereGeometry(5, 32, 32), new THREE.MeshPhongMaterial({
+						color: 0xbdbdbd,
+						specular: 0x444444,
+						shininess: 80
+					}));
+					scene.add(this.mesh);
+				}
+				
+				update(dt) {
+					this.vel.add(this.force.clone().multiplyScalar(dt));
+					this.pos.add(this.vel.clone().multiplyScalar(dt));
+					this.mesh.position.copy(this.pos);
+					this.mesh.position.y = 5;
+					
+					// border check
+					//外框牆面碰撞
+					if (this.pos.x > 90) {
+						this.pos.setX (90);
+						this.vel.setX (0);
+					} else if (this.pos.x < -90) {
+						this.pos.setX (-90);
+						this.vel.setX (0);
+					}
+					
+					if (this.pos.z > 90) {
+						this.pos.setZ (90);
+						this.vel.setZ (0);
+					} else if (this.pos.z < -90) {
+						this.pos.setZ (-90);
+						this.vel.setZ (0);
+					}
+					
+					//中間牆面碰撞
+					if (this.pos.x <= 7.5 && this.pos.x >= -7.5) {
+						if(this.pos.x > 0 && this.pos.z >= -5){
+							this.pos.setX(7.5);
+							this.vel.setX(0);
+						}
+						
+						if(this.pos.x < 0 && this.pos.z >= -5) {
+							this.pos.setX(-7.5);
+							this.vel.setX(0);
+						}
+					}
+					
+					if (this.pos.x <= 57.5 && this.pos.x >= -57.5) {
+						if(this.pos.z <= 7.5 && this.pos.z >= -7.5) {
+							if (this.pos.z < 0) {
+								this.pos.setZ(-7.5);
+								this.vel.setZ(0);
+							}
+							
+							if (this.pos.z > 0) {
+								this.pos.setZ(7.5);
+								this.vel.setZ(0);
+							}
+						}
+					}
+						
+					//右側牆面碰撞
+					if (this.pos.x <= 90 && this.pos.x >= 42.5) {
+						if(this.pos.z <= 57.5 && this.pos.z >= 42.5) {
+							if (this.pos.z > 50) {
+								this.pos.setZ(57.5);
+								this.vel.setZ(0);
+							}
+							
+							if (this.pos.z < 50) {
+								this.pos.setZ(42.5);
+								this.vel.setZ(0);
+							}
+						}
+					}
+					
+					//左側牆面碰撞
+					if (this.pos.x <= -42.5 && this.pos.x >= -90) {
+						if(this.pos.z <= 57.5 && this.pos.z >= 42.5) {
+							if (this.pos.z > 50) {
+								this.pos.setZ(57.5);
+								this.vel.setZ(0);
+							}
+							
+							if (this.pos.z < 50) {
+								this.pos.setZ(42.5);
+								this.vel.setZ(0);
+							}
+						}
+					}
+				}
+				
+				hide() {
+					scene.remove(this.mesh);
+				}
+
+				show(dt) {
+					scene.remove(this.mesh);
+					this.mesh = new THREE.Mesh(new THREE.SphereGeometry(5, 32, 32), new THREE.MeshPhongMaterial({
+						color: 0xbdbdbd,
+						specular: 0x444444,
+						shininess: 80
+					}));
+					scene.add(this.mesh);
+					
+					this.update(dt);
+				}
+			}
+			
+			class Plane {
+				constructor() {
+					// properties
+					this.pos = new THREE.Vector3(0, 10, 0); // object frame
+					this.normal = new THREE.Vector3(0, 1, 0); // object frame
+					this.mesh = new THREE.Mesh(new THREE.BoxGeometry(500, 20, 500), new THREE.MeshLambertMaterial({
+						transparent: true,
+						opacity: 0.5
+					}));
+					scene.add(this.mesh);
+
+					// methods
+					this.isPointOut = function (point) {
+						// considering plane transformation
+						var posW = this.pos.clone(); // in world frame
+						var normalW = this.normal.clone();
+						posW.applyMatrix4(this.mesh.matrixWorld);
+						var tt = new THREE.Matrix4();
+						normalW.applyMatrix4(tt.getInverse(this.mesh.matrixWorld).transpose());
+
+						return true; // for infinite plane
+						// for contact problem, this should check whether the ball
+						// rolls out of boundary
+					}
+				}
+			}
+			
+			//坑洞
+			class Pit {
+				constructor() {
+					pit = new THREE.Mesh(new THREE.SphereBufferGeometry (6,32,32,0,6.3,4.7,3), new THREE.MeshPhongMaterial({
+						color: 0xbdbdbd,
+						specular: 0x444444,
+						shininess: 80
+					}));
+				
+					pit.position.x = 89;
+					pit.position.z = 89;
+					pit.rotation.x = Math.PI;
+					
+					scene.add(pit);
+				}
+			}
+			
+			//牆面物件
+			class Wall {
+				constructor(boxX,boxY,boxZ,posiX,posiY,posiZ,wallType) {
+					this.element = new THREE.Mesh(new THREE.BoxBufferGeometry(boxX,boxY,boxZ), new THREE.MeshPhongMaterial({
+						side: THREE.DoubleSide,
+						map: wallType
+					}));
+					scene.add(this.element);
+					this.element.position.x = posiX;
+					this.element.position.y = posiY;
+					this.element.position.z = posiZ;
+				}
+			}
+			
+			var camera, scene, renderer, light;
+			var plane;
+			var pit;
+			var ball=[];
+			var wall=[];
+			var fall=[];
+			var doubleBall = false;
+			var clock = new THREE.Clock();
+			var mouse = new THREE.Vector2();
+			var gravity = new THREE.Vector3();
+			var deviceInfo, gamma = 0, beta = 0;
+			
+			$('#toggle').click(function() {
+				doubleBall = !doubleBall;
+				if (doubleBall) {
+					$(this).text("單球");
+				} else {
+					$(this).text("雙球");
+				}
+			});
+
+			init();
+			animate();
+			
+			function init() {
+				//2D觀看
+				
+				scene = new THREE.Scene();
+
+				camera = new THREE.OrthographicCamera(-110, 110, 110, -110, 10, 2000);
+				camera.position.set(0, 450, 0);
+				camera.up.set(0, 0, -1);
+				camera.lookAt(new THREE.Vector3(0, 0, 0));
+				scene.add(camera);
+				
+				var gridXZ = new THREE.GridHelper(200, 10, 'red', 'white');
+				//scene.add(gridXZ);
+				//scene.add (new THREE.AxisHelper (30));
+				
+				renderer = new THREE.WebGLRenderer();
+				renderer.setSize(window.innerWidth, window.innerHeight);
+				renderer.setClearColor(0x888888);
+				
+				//////////////////////////////////////////////////////////////////////////////
+				document.body.appendChild(renderer.domElement);
+				window.addEventListener('resize', onWindowResize, false);
+				//document.addEventListener('mousemove', onDocumentMouseMove, false);
+				deviceInfo = document.getElementById('deviceInfo');
+
+				window.addEventListener('deviceorientation', function(e) {
+					gamma = e.gamma;
+					beta = e.beta;
+					console.log (gamma +', ' + beta + ', ' + e.alpha);
+				});
+				
+				//////////////////////////////////////////////////////////////////////////////
+				//3D觀看
+				/*
+				scene = new THREE.Scene();
+				renderer = new THREE.WebGLRenderer();
+				renderer.setSize(window.innerWidth, window.innerHeight);
+				renderer.setClearColor(0x888888);
+				document.body.appendChild(renderer.domElement);
+
+				camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 10000);
+				camera.position.y = 100;
+				camera.position.z = 200;
+				controls = new THREE.OrbitControls(camera, renderer.domElement);
+
+				var gridXZ = new THREE.GridHelper(200, 20, 'red', 'white');
+				scene.add(gridXZ);
+
+				window.addEventListener('resize', onWindowResize, false);
+				*/
+				//////////////////////////////////////////////////////////////////////////////
+				//地面
+				let loader = new THREE.TextureLoader();
+				loader.crossOrigin = '';
+				texture = loader.load('https://i.imgur.com/AtF0mSB.jpg');
+				texture.repeat.set (2,2);
+				texture.wrapS = texture.wrapT = true;
+			  
+				let floor = new THREE.Mesh(new THREE.PlaneGeometry(200, 200), new THREE.MeshPhongMaterial({
+					side: THREE.DoubleSide,
+					map: texture
+				}));
+				scene.add(floor);
+				floor.rotation.x = -Math.PI / 2;
+				floor.position.y = -10;
+				//////////////////////////////////////////////////////////////////////////////
+				//燈光
+				light = new THREE.PointLight(0xffffff);
+				light.position.set(0, 300, 0);
+				scene.add(light);
+				
+				//////////////////////////////////////////////////////////////////////////////
+				//球
+				ball[0] = new Ball(-89,90);
+				ball[1] = new Ball(-89,-90);
+				
+				for(let i=0;i<ball.length;i++){
+					fall[i]=false;
+				}
+
+				//////////////////////////////////////////////////////////////////////////////
+				//凹洞
+				pit = new Pit();
+				
+				////////////////////////////////////////////////
+				//牆面
+				let walltexture = loader.load('https://i.imgur.com/nMT3ag9.jpg');
+				walltexture.wrapS = walltexture.wrapT = true;
+				
+				//外框
+				wall[0] = new Wall(200,10,5,0,5,97.5,walltexture);
+				wall[1] = new Wall(200,10,5,0,5,-97.5,walltexture);
+				wall[2] = new Wall(5,10,200,97.5,5,0,walltexture);
+				wall[3] = new Wall(5,10,200,-97.5,5,0,walltexture);
+				
+				//內框
+				wall[4] = new Wall(5,10,100,0,5,50,walltexture);
+				wall[5] = new Wall(100,10,5,0,5,0,walltexture);
+				wall[6] = new Wall(50,10,5,-75,5,50,walltexture);
+				wall[7] = new Wall(50,10,5,75,5,50,walltexture);
+			}
+			
+			function onWindowResize() {
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+				renderer.setSize(window.innerWidth, window.innerHeight);
+			}
+
+			function Contact(ball, plane) {
+				for(let i=0;i<ball.length;i++) {
+					ball[i].pos.setY(5); // ball position correction
+					let normalW = new THREE.Vector3(0, 1, 0); // local plane normal
+					
+					ball[i].force.copy (gravity.projectOnPlane (normalW));
+				}
+			}
+
+			function animate() {
+				var a = new THREE.Euler(-beta*Math.PI/180, 0, gamma*Math.PI/180, 'XYZ');
+				gravity = new THREE.Vector3(0, -180, 0);
+				gravity.applyEuler(a);
+				 
+				Contact(ball, plane);
+				let dt = clock.getDelta();
+				
+				for(let i=0;i<ball.length;i++) {
+					if(ball[i].pos.x >= 85 && ball[i].pos.x <= 95) {
+						if(ball[i].pos.z >= 85 && ball[i].pos.z <=95) {
+							fall[i] = true;
+						}
+					}
+
+					if (doubleBall) {
+						if(fall[i] != true) {
+							ball[i].show(dt);
+						} else {
+							ball[i].mesh.position.x = 89;
+							ball[i].mesh.position.y = 0;
+							ball[i].mesh.position.z = 89;
+						}
+					} else {
+						ball[1].hide();
+						if(fall[0] != true) {
+							ball[0].show(dt);
+						} else {
+							ball[0].mesh.position.x = 89;
+							ball[0].mesh.position.y = 0;
+							ball[0].mesh.position.z = 89;
+						}
+					}
+				}
+				/*
+				deviceInfo.innerHTML = 'ball[0]：[x:' + ball[0].pos.x +'], [y: ' + ball[0].pos.y +'], [z: '+ ball[0].pos.z+'], [fall: '+fall[0]+']<br>'+
+				                       'ball[1]：[x:' + ball[1].pos.x +'], [y: ' + ball[1].pos.y +'], [z: '+ ball[1].pos.z+'], [fall: '+fall[1]+']<br>';
+				*/
+
+				requestAnimationFrame(animate);
+				renderer.render(scene, camera);
+			}
+		</script>
+	</body>
+</html>
